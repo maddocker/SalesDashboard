@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "home-dashboard"
+version = "0.1.0"
+dependencies = [
+    "squareup ~= 37.1.0.20240604",
+]
+authors = [
+    { name="Kyle Madlon", email="kmadlon@yahoo.com" },
+]
+description = "Display sales volume data for the Milk Pail on an e-ink display"
+readme = "README.md"
+requires-python = ">=3.12"
+
+[project.scripts]
+home-dashboard = "home_dashboard.home_dashboard:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
