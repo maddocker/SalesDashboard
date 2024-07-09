@@ -1,4 +1,5 @@
 import os
+import sys
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 
@@ -19,18 +20,21 @@ def update_display_success():
 
     pass
 
-def update_display_failure():
+def update_display_failure(message: str):
     # Refresh
 
 
     # Display: failure (connection/etc); timestamp of this update
 
 
-    pass
+    print(message)
+    sys.exit(message)
 
 def main():
     # Exit early with reason if access token not set as environment variable
 
+    if not ACCESS_TOKEN:
+        update_display_failure('Square access token not set')
 
     # Connect to Square
     client = Client(
