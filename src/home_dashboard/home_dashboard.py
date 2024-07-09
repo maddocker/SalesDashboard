@@ -1,7 +1,8 @@
+import os
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 
-ACCESS_TOKEN = 'EAAAlhz7MyLdhOAiAQFwaTETyXvGk00ZmR2hYPVA5NfKqdcdYLpOHmIcTAtiVFvU'
+ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 TRANSACTION_LIMIT = 1000
 
 def get_daily_total():
