@@ -1,14 +1,38 @@
 import os
 import sys
+from datetime import datetime
+from decimal import Decimal
+import pytz
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 
 ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 TRANSACTION_LIMIT = 1000
 
-def get_daily_total():
-    # Total transaction amounts while removing refunds
-    pass
+def get_decimal_from_money(money: int):
+    """
+    Square stores money as `int` in cents. Use this function to convert into `Decimal`.
+    """
+    return Decimal(money / 100)
+
+def get_daily_totals(payments: list):
+    daily_totals = {}
+    for payment in payments:
+
+        # Convert timestamp to Central Time
+        payment_time_utc = datetime.fromisoformat(payment['created_at'])
+        payment_time_local = payment_time_utc.astimezone(pytz.timezone('US/Central'))
+        payment_date_str = payment_time_local.date().isoformat()
+
+        # Total transaction amount per day while removing refunds
+        if not daily_totals.get(payment_date_str):
+            daily_totals[payment_date_str] = get_decimal_from_money(payment['amount_money']['amount'])
+        else:
+            daily_totals[payment_date_str] += get_decimal_from_money(payment['amount_money']['amount'])
+        if (refund := payment.get('refunded_money')):
+            daily_totals[payment_date_str] -= get_decimal_from_money(refund['amount'])
+        
+    return daily_totals
 
 def update_display_success():
     # Refresh
@@ -44,24 +68,25 @@ def main():
         environment='production'
     )
 
-    # Get all payments (utilizing pagination)
+    # Get all payments (utilizes pagination; might go up to 100 over transaction limit)
+    payments = []
     result = client.payments.list_payments()
     if result.is_success():
-
+        while (result.body != {}):
+            payments.extend(result.body.get('payments'))
+            if result.cursor and len(payments) < TRANSACTION_LIMIT:
+                result = client.payments.list_payments(cursor=result.cursor)
+            else:
+                break
     else:
         update_display_failure(result.errors)
 
-    #print(len(result.body.get('payments')))
-
     # Get daily totals for previous week
-
+    print(get_daily_totals(payments))
+    print(datetime.now())
 
     # Get timestamp of last transaction
-
-
-    ## TESTING
-    # Call API for result
-    #result = client.payments.list_payments()
+    
 
 if __name__ == '__main__':
     main()

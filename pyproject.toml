@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "home-dashboard"
 version = "0.1.0"
 dependencies = [
+    "pytz ~= 2024.1",
     "squareup ~= 37.1.0.20240604",
 ]
 authors = [
