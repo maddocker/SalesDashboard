@@ -6,8 +6,12 @@ build-backend = "setuptools.build_meta"
 name = "home-dashboard"
 version = "0.1.0"
 dependencies = [
+    "matplotlib ~= 3.9.1",
     "pytz ~= 2024.1",
+    "RPi.GPIO ~= 0.7.1",
+    "spidev ~= 3.6",
     "squareup ~= 37.1.0.20240604",
+    "waveshare-epaper ~= 1.3.0",
 ]
 authors = [
     { name="Kyle Madlon", email="kmadlon@yahoo.com" },

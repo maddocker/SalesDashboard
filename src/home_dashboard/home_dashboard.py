@@ -2,6 +2,7 @@ import os
 import sys
 from datetime import datetime
 from decimal import Decimal
+import matplotlib.pyplot as plt
 import pytz
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
@@ -9,7 +10,7 @@ from square.client import Client
 ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 TRANSACTION_LIMIT = 1000
 
-DATETIME_FORMAT = "%I:%M %p, %m-%d-%Y"
+DATETIME_FORMAT = "%I:%M %p, %x"
 
 def get_decimal_from_money(money: int):
     """
@@ -27,7 +28,7 @@ def get_daily_totals(payments: list):
         # Convert timestamp to Central Time
         payment_time_utc = datetime.fromisoformat(payment['created_at'])
         payment_time_local = get_local_datetime(payment_time_utc)
-        payment_date_str = payment_time_local.date().isoformat()
+        payment_date_str = payment_time_local.date().strftime('%a %x')
 
         # Total transaction amount per day while removing refunds
         if not daily_totals.get(payment_date_str):
@@ -45,10 +46,22 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
 
     # Display: total sales for today and previous 6 days; timestamp of last
     # transaction; timestamp of this update
+    print("Totals:")
     for date, amount in daily_totals.items():
-        print(f"Total for {date}: ${amount}")
+        print(f"{date}: ${amount}")
     print("Last transaction: " + last_transaction.strftime(DATETIME_FORMAT))
     print("Updated: " + datetime.now().strftime(DATETIME_FORMAT))
+
+    # Test bar graph
+    fig, ax = plt.subplots(figsize=(16, 9))
+    ax.barh(daily_totals.keys(), daily_totals.values())
+    ax.invert_yaxis()
+    for i in ax.patches:
+        plt.text(i.get_width()+0.2, i.get_y()+0.5,
+                str(i.get_width()),
+                fontsize=10, fontweight='bold')
+    ax.set_title('Gross Sales Per Day')
+    plt.show()
 
 def update_display_failure(message: str):
     # Refresh
