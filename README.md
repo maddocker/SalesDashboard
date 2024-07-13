@@ -1,2 +1,2 @@
-# HomeDashboard
+# SalesDashboard
 Work in progress!
