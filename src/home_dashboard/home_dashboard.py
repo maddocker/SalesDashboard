@@ -1,14 +1,15 @@
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 import matplotlib.pyplot as plt
 import pytz
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 
+DAYS_TO_SHOW = 7
+
 ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
-TRANSACTION_LIMIT = 1000
 
 DATETIME_FORMAT = "%I:%M %p, %x"
 
@@ -57,9 +58,13 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
     ax.barh(daily_totals.keys(), daily_totals.values())
     ax.invert_yaxis()
     for i in ax.patches:
-        plt.text(i.get_width()+0.2, i.get_y()+0.5,
-                str(i.get_width()),
-                fontsize=10, fontweight='bold')
+        plt.text(
+            i.get_width() + 0.2,
+            i.get_y() + 0.5,
+            '$' + str(i.get_width()),
+            fontsize=10,
+            fontweight='bold'
+        )
     ax.set_title('Gross Sales Per Day')
     plt.show()
 
@@ -75,7 +80,6 @@ def update_display_failure(message: str):
 
 def main():
     # Exit early with reason if access token not set as environment variable
-
     if not ACCESS_TOKEN:
         update_display_failure('Square access token not set')
 
@@ -87,14 +91,20 @@ def main():
         environment='production'
     )
 
-    # Get all payments (utilizes pagination; might go up to 100 over transaction limit)
+    # Get datetime for one week ago (midnight)
+    since_datetime = datetime.now() - timedelta(DAYS_TO_SHOW)
+    since_datetime = get_local_datetime(since_datetime)
+    since_datetime = since_datetime.replace(hour=0, minute=0, second=0)
+    since = since_datetime.isoformat(timespec='seconds')
+
+    # Get all payments since datetime (utilizes pagination)
     payments = []
-    result = client.payments.list_payments()
+    result = client.payments.list_payments(since)
     if result.is_success():
         while (result.body != {}):
             payments.extend(result.body.get('payments'))
-            if result.cursor and len(payments) < TRANSACTION_LIMIT:
-                result = client.payments.list_payments(cursor=result.cursor)
+            if result.cursor:
+                result = client.payments.list_payments(since, cursor=result.cursor)
             else:
                 break
     else:
