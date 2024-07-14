@@ -111,7 +111,7 @@ def update_display_failure(message: str):
 def main():
     # Exit early with reason if access token not set as environment variable
     if not ACCESS_TOKEN:
-        update_display_failure('Square access token not set')
+        update_display_failure('SQUARE_ACCESS_TOKEN not set')
 
     # Connect to Square
     client = Client(
