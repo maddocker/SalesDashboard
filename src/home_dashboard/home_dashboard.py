@@ -65,7 +65,6 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
             fontsize=10,
             fontweight='bold'
         )
-    ax.set_title('Gross Sales Per Day')
     plt.show()
 
 def update_display_failure(message: str):
@@ -74,8 +73,6 @@ def update_display_failure(message: str):
 
     # Display: failure (connection/etc); timestamp of this update
 
-
-    print(message)
     sys.exit(message)
 
 def main():
