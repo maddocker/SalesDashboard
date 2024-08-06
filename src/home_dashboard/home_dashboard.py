@@ -3,7 +3,7 @@ import sys
 from datetime import datetime, timedelta
 from decimal import Decimal
 import matplotlib.pyplot as plt
-import pytz
+from zoneinfo import ZoneInfo
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 
@@ -20,7 +20,7 @@ def get_decimal_from_money(money: int):
     return round(Decimal(money / 100), 2)
 
 def get_local_datetime(utc_datetime: datetime):
-    return utc_datetime.astimezone(pytz.timezone('US/Central'))
+    return utc_datetime.astimezone(ZoneInfo('US/Central'))
 
 def get_daily_totals(payments: list):
     daily_totals = {}
