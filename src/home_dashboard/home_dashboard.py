@@ -1,11 +1,14 @@
 import os
 import sys
+import io
 from datetime import datetime, timedelta
 from decimal import Decimal
 import matplotlib.pyplot as plt
 from zoneinfo import ZoneInfo
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
+from PIL import Image, ImageDraw
+import epaper
 
 DAYS_TO_SHOW = 7
 
@@ -13,11 +16,22 @@ ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 
 DATETIME_FORMAT = "%I:%M %p, %x"
 
+display = epaper.epaper('epd4in2').EPD()
+
 def get_decimal_from_money(money: int):
     """
     Square stores money as `int` in cents. Use this function to convert into `Decimal`.
     """
     return round(Decimal(money / 100), 2)
+
+def show_update_timestamp(new_frame: Image):
+    update_str = "Updated: " + datetime.now().strftime(DATETIME_FORMAT)
+    draw = ImageDraw.Draw(new_frame)
+    draw.text(
+        (240, display.height - 20),
+        update_str,
+        fill=0
+    )
 
 def get_local_datetime(utc_datetime: datetime):
     return utc_datetime.astimezone(ZoneInfo('US/Central'))
@@ -42,21 +56,14 @@ def get_daily_totals(payments: list):
     return daily_totals
 
 def update_display_success(daily_totals: dict, last_transaction: datetime):
-    # Refresh
+    last_trans_str = "Last transaction: " + last_transaction.strftime(DATETIME_FORMAT)
 
-
-    # Display: total sales for today and previous 6 days; timestamp of last
-    # transaction; timestamp of this update
-    print("Totals:")
-    for date, amount in daily_totals.items():
-        print(f"{date}: ${amount}")
-    print("Last transaction: " + last_transaction.strftime(DATETIME_FORMAT))
-    print("Updated: " + datetime.now().strftime(DATETIME_FORMAT))
-
-    # Test bar graph
-    fig, ax = plt.subplots(figsize=(16, 9))
+    # Configure and save bar graph
+    fig, ax = plt.subplots(figsize=(4, 3))
     ax.barh(daily_totals.keys(), daily_totals.values())
     ax.invert_yaxis()
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
     for i in ax.patches:
         plt.text(
             i.get_width() + 0.2,
@@ -65,20 +72,46 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
             fontsize=10,
             fontweight='bold'
         )
-    plt.show()
+    fig.tight_layout(h_pad=1.0)
+    buf = io.BytesIO()
+    fig.savefig(buf)
+    buf.seek(0)
+
+    # Display: total sales for today and previous 6 days; timestamp of last
+    # transaction; timestamp of this update
+    display.init()
+    display.Clear()
+    image = Image.new('1', (display.width, display.height), 255)
+    graph = Image.open(buf).resize((display.width, display.height))
+    image.paste(graph, (0, -15))
+    draw = ImageDraw.Draw(image)
+    draw.text(
+        (10, display.height - 20),
+        last_trans_str,
+        fill=0
+    )
+    show_update_timestamp(image)
+    display.display(display.getbuffer(image))
 
 def update_display_failure(message: str):
-    # Refresh
-
-
     # Display: failure (connection/etc); timestamp of this update
-
+    display.init()
+    display.Clear()
+    image = Image.new('1', (display.width, display.height), 255)
+    draw = ImageDraw.Draw(image)
+    draw.text(
+        (20, 150),
+        message,
+        fill=0
+    )
+    show_update_timestamp(image)
+    display.display(display.getbuffer(image))
     sys.exit(message)
 
 def main():
     # Exit early with reason if access token not set as environment variable
     if not ACCESS_TOKEN:
-        update_display_failure('Square access token not set')
+        update_display_failure('SQUARE_ACCESS_TOKEN not set')
 
     # Connect to Square
     client = Client(
@@ -96,16 +129,19 @@ def main():
 
     # Get all payments since datetime (utilizes pagination)
     payments = []
-    result = client.payments.list_payments(since)
-    if result.is_success():
-        while (result.body != {}):
-            payments.extend(result.body.get('payments'))
-            if result.cursor:
-                result = client.payments.list_payments(since, cursor=result.cursor)
-            else:
-                break
-    else:
-        update_display_failure(result.errors)
+    try:
+        result = client.payments.list_payments(since)
+        if result.is_success():
+            while (result.body != {}):
+                payments.extend(result.body.get('payments'))
+                if result.cursor:
+                    result = client.payments.list_payments(since, cursor=result.cursor)
+                else:
+                    break
+        else:
+            update_display_failure(result.errors)
+    except Exception as e:
+        update_display_failure(str(e))
 
     # Get daily totals for previous week
     daily_totals = get_daily_totals(payments)
