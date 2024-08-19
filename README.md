@@ -1,7 +1,8 @@
 # SalesDashboard
 Tired of logging into Square and refreshing every so often to get your updated daily sales? So was I, so it became my excuse to use my e-ink display for something different than a standard weather station.
-![Reference Example](example.jpg)
-Actual hardware (case) coming soon.
+
+![Reference Example: Front](front.jpg)
+![Reference Example: Back](back.jpg)
 
 ## Execution
 1. Create a new application in your Square store. You will need a production access token to retrieve your transaction data.
@@ -25,4 +26,5 @@ SQUARE_ACCESS_TOKEN={{token here}}
 
 ## Other Notes
 - The code expects you to be in the Central timezone. Changing this should be fairly minimal if you are elsewhere.
-- The `rpi-lgpio` was a last-minute addition because I ended up using my new Raspberry Pi 5 for this instead of the Zero 2W--take it from me and keep those pin headers around even if you don't have a use for them at the moment. This package is a requirement because the 5 apparently uses different hardware for the GPIO. I am not currently sure if this package being installed will conflict with other RP models, but you may have to remove that line if so. I plan on testing this once I have another Pi to test.
+- The `rpi-lgpio` library was a last-minute addition because I ended up using my new Raspberry Pi 5 for this instead of the Zero 2W--take it from me and keep those pin headers around even if you don't have a use for them at the moment. This package is a requirement because the 5 apparently uses different hardware for the GPIO. I am not currently sure if this package being installed will conflict with other RP models, but you may have to remove that line if so. I plan on testing this once I have another Pi to test.
+- The display stand printed fine for me with tree supports and 40% infill. The Pi and the display took a small amount of force to clear the guides, but are now in place enough that I didn't feel the need to have any other retention method. Your printer's tolerance may differ.
