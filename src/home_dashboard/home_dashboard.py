@@ -16,7 +16,7 @@ ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 
 DATETIME_FORMAT = "%I:%M %p, %x"
 
-display = epaper.epaper('epd4in2').EPD()
+display = epaper.epaper('epd4in2b_V2').EPD()
 
 def get_decimal_from_money(money: int):
     """
