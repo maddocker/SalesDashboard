@@ -92,6 +92,7 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
     )
     show_update_timestamp(image)
     display.display(display.getbuffer(image))
+    display.sleep()
 
 def update_display_failure(message: str):
     # Display: failure (connection/etc); timestamp of this update
@@ -106,6 +107,7 @@ def update_display_failure(message: str):
     )
     show_update_timestamp(image)
     display.display(display.getbuffer(image))
+    display.sleep()
     sys.exit(message)
 
 def main():
