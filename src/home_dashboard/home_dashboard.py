@@ -17,6 +17,7 @@ ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 DATETIME_FORMAT = "%I:%M %p, %x"
 
 display = epaper.epaper('epd4in2b_V2').EPD()
+blank_image = Image.new('1', (display.width, display.height), 255)
 
 def get_decimal_from_money(money: int):
     """
@@ -81,7 +82,7 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
     # transaction; timestamp of this update
     display.init()
     display.Clear()
-    image = Image.new('1', (display.width, display.height), 255)
+    image = blank_image.copy()
     graph = Image.open(buf).resize((display.width, display.height))
     image.paste(graph, (0, -15))
     draw = ImageDraw.Draw(image)
@@ -91,14 +92,14 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
         fill=0
     )
     show_update_timestamp(image)
-    display.display(display.getbuffer(image))
+    display.display(display.getbuffer(image), display.getbuffer(blank_image))
     display.sleep()
 
 def update_display_failure(message: str):
     # Display: failure (connection/etc); timestamp of this update
     display.init()
     display.Clear()
-    image = Image.new('1', (display.width, display.height), 255)
+    image = blank_image.copy()
     draw = ImageDraw.Draw(image)
     draw.text(
         (20, 150),
@@ -106,7 +107,7 @@ def update_display_failure(message: str):
         fill=0
     )
     show_update_timestamp(image)
-    display.display(display.getbuffer(image))
+    display.display(display.getbuffer(image), display.getbuffer(blank_image))
     display.sleep()
     sys.exit(message)
 
