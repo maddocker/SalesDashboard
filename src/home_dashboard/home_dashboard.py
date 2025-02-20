@@ -17,7 +17,7 @@ ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 DATETIME_FORMAT = "%I:%M %p, %x"
 
 display = epaper.epaper('epd4in2b_V2').EPD()
-blank_image = Image.new('1', (display.width, display.height), 255)
+blank_image = Image.new('L', (display.width, display.height), 255)
 
 def get_decimal_from_money(money: int):
     """
