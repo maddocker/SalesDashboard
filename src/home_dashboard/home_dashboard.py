@@ -4,7 +4,6 @@ import io
 from datetime import datetime, timedelta
 from decimal import Decimal
 import matplotlib.pyplot as plt
-from zoneinfo import ZoneInfo
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 from PIL import Image, ImageDraw
@@ -35,7 +34,7 @@ def show_update_timestamp(new_frame: Image):
     )
 
 def get_local_datetime(utc_datetime: datetime):
-    return utc_datetime.astimezone(ZoneInfo('US/Central'))
+    return utc_datetime.astimezone()
 
 def get_daily_totals(payments: list):
     daily_totals = {}
