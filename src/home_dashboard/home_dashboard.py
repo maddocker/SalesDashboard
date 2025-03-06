@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from square.http.auth.o_auth_2 import BearerAuthCredentials
 from square.client import Client
 from PIL import Image, ImageDraw
-import epaper
+from waveshare_epd import epd4in2_V2 as epd
 
 DAYS_TO_SHOW = 7
 
@@ -15,8 +15,8 @@ ACCESS_TOKEN = os.environ.get('SQUARE_ACCESS_TOKEN')
 
 DATETIME_FORMAT = "%I:%M %p, %x"
 
-display = epaper.epaper('epd4in2b_V2').EPD()
-blank_image = Image.new('L', (display.width, display.height), 255)
+display = epd.EPD()
+image = Image.new('L', (display.width, display.height), 255)
 
 def get_decimal_from_money(money: int):
     """
@@ -81,7 +81,6 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
     # transaction; timestamp of this update
     display.init()
     display.Clear()
-    image = blank_image.copy()
     graph = Image.open(buf).resize((display.width, display.height))
     image.paste(graph, (0, -15))
     draw = ImageDraw.Draw(image)
@@ -91,14 +90,13 @@ def update_display_success(daily_totals: dict, last_transaction: datetime):
         fill=0
     )
     show_update_timestamp(image)
-    display.display(display.getbuffer(image), display.getbuffer(blank_image))
+    display.display(display.getbuffer(image))
     display.sleep()
 
 def update_display_failure(message: str):
     # Display: failure (connection/etc); timestamp of this update
     display.init()
     display.Clear()
-    image = blank_image.copy()
     draw = ImageDraw.Draw(image)
     draw.text(
         (20, 150),
@@ -106,11 +104,11 @@ def update_display_failure(message: str):
         fill=0
     )
     show_update_timestamp(image)
-    display.display(display.getbuffer(image), display.getbuffer(blank_image))
+    display.display(display.getbuffer(image))
     display.sleep()
     sys.exit(message)
 
-def main():
+def run():
     # Exit early with reason if access token not set as environment variable
     if not ACCESS_TOKEN:
         update_display_failure('SQUARE_ACCESS_TOKEN not set')
@@ -153,6 +151,13 @@ def main():
 
     # Display dashboard
     update_display_success(daily_totals, last_transaction_time)
+
+def main():
+    try:
+        run()
+    except KeyboardInterrupt:
+        epd.epdconfig.module_exit(cleanup=True)
+        exit()
 
 if __name__ == '__main__':
     main()
